@@ -56,13 +56,10 @@ namespace btai::zoo {
     }
 
     void BTAI::step(const std::shared_ptr<Environment> &env) {
-        static int id = 0; // TODO
-        ++id; // TODO
         for (int j = 0; j < _mcts->config()->nbPlanningSteps(); ++j) {
             auto selectedNode = _mcts->selectNode(env->actions());
             auto b = selectedNode->data()->beliefs();
             auto expandedNodes = _mcts->expansion(selectedNode, _b);
-            writeGraphviz("planning_output_" + std::to_string(id) + "." + std::to_string(j) + ".graph", {"G", "U", "N", "S"});// TODO
             _mcts->evaluation(expandedNodes, _a, _c);
             _mcts->propagation(expandedNodes);
         }
@@ -70,7 +67,6 @@ namespace btai::zoo {
         static int step_id = 0;
         writeGraphviz("planning_output_" + std::to_string(step_id) + ".graph", {"G", "U", "N", "S"});
         ++step_id;
-        exit(0);//TODO
 #endif
         int action = _mcts->selectAction();
 #ifndef NDEBUG
