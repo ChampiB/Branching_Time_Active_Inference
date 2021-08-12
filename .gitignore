@@ -1,0 +1,55 @@
+# But those files
+!examples/graphs/graph_format.md
+!examples/graphs/example.graph
+examples/graphs/*
+examples/data
+examples/cats_and_dogs/*
+examples/images/*
+libs/torch
+libs
+build
+results
+
+.vs/*
+out/*
+cmake-build-relwithdebinfo/*
+cmake-build-release/*
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CLion
+cmake-build-debug/
+.idea/
+build/
+examples/.idea
