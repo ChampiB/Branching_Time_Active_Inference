@@ -2,12 +2,12 @@
 // Created by Theophile Champion on 01/07/2021.
 //
 
-#ifndef BTAI_TIME_TRACKER_H
-#define BTAI_TIME_TRACKER_H
+#ifndef EXPERIMENTS_AI_TS_TIME_TRACKER_H
+#define EXPERIMENTS_AI_TS_TIME_TRACKER_H
 
-#include <chrono>
 #include <iostream>
 #include <memory>
+#include <torch/torch.h>
 
 namespace btai::experiments {
 
@@ -15,9 +15,16 @@ namespace btai::experiments {
     public:
         /**
          * Create a time tracker.
+         * @param nb_runs the number of runs whose time should be tracked.
          * @return the time tracker.
          */
-        static std::unique_ptr<TimeTracker> create();
+        static std::unique_ptr<TimeTracker> create(int nb_runs);
+
+        /**
+         * Constructor.
+         * @param nb_runs the number of runs whose time should be tracked.
+         */
+        explicit TimeTracker(int nb_runs);
 
         /**
          * Record the starting time point.
@@ -38,8 +45,11 @@ namespace btai::experiments {
     private:
         std::chrono::time_point<std::chrono::steady_clock> begin;
         std::chrono::time_point<std::chrono::steady_clock> end;
+        torch::Tensor ex_times_s{};
+        torch::Tensor ex_times_ms{};
+        int index;
     };
 
 }
 
-#endif //BTAI_TIME_TRACKER_H
+#endif //EXPERIMENTS_AI_TS_TIME_TRACKER_H

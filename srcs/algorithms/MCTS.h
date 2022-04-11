@@ -12,12 +12,12 @@ namespace btai::algorithms::configurations {
     class ConfigMCTS;
 }
 namespace btai::graphs {
-    template<class DataType> class TreeNode;
+    class TreeNode;
 }
 namespace btai::graphs::data {
     class DataMCTS;
 }
-using NodeMCTS = btai::graphs::TreeNode<btai::graphs::data::DataMCTS>;
+using NodeMCTS = btai::graphs::TreeNode;
 
 namespace btai::algorithms {
 
@@ -89,13 +89,13 @@ namespace btai::algorithms {
          * Setter.
          * @param root the new root.
          */
-        void setRoot(const std::shared_ptr<graphs::TreeNode<graphs::data::DataMCTS>> &root);
+        void setRoot(const std::shared_ptr<graphs::TreeNode> &root);
 
         /**
          * Getter.
          * @return the root of the tree on which MCTS is operating.
          */
-        std::shared_ptr<graphs::TreeNode<graphs::data::DataMCTS>> root();
+        std::shared_ptr<graphs::TreeNode> root();
 
     private:
         /**

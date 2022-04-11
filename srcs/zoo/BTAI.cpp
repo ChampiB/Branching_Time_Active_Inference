@@ -6,7 +6,6 @@
 #include "algorithms/configurations/ConfigMCTS.h"
 #include "algorithms/MCTS.h"
 #include "algorithms/BayesianFiltering.h"
-#include "graphs/data/DataMCTS.h"
 #include "graphs/TreeNode.h"
 #include "graphs/GraphViz.h"
 #include "environments/Environment.h"
@@ -43,13 +42,9 @@ namespace btai::zoo {
 
         // Compute posterior beliefs over initial state
         auto posterior = BayesianFiltering::integrateEvidence(_d, _a, obs);
-#ifndef NDEBUG
-        std::cout << "Posterior over initial state: " << std::endl;
-        std::cout << posterior << std::endl;
-#endif
 
         // Create the root of the tree.
-        auto root = TreeNode<DataMCTS>::create(DataMCTS::create(posterior));
+        auto root = TreeNode::create(posterior);
 
         // Create the MCTS algorithm.
         _mcts = MCTS::create(root, config);
@@ -58,30 +53,20 @@ namespace btai::zoo {
     void BTAI::step(const std::shared_ptr<Environment> &env) {
         for (int j = 0; j < _mcts->config()->nbPlanningSteps(); ++j) {
             auto selectedNode = _mcts->selectNode(env->actions());
-            auto b = selectedNode->data()->beliefs();
             auto expandedNodes = _mcts->expansion(selectedNode, _b);
             _mcts->evaluation(expandedNodes, _a, _c);
             _mcts->propagation(expandedNodes);
         }
-#ifndef NDEBUG
-        static int step_id = 0;
-        writeGraphviz("planning_output_" + std::to_string(step_id) + ".graph", {"G", "U", "N", "S"});
-        ++step_id;
-#endif
         int action = _mcts->selectAction();
-#ifndef NDEBUG
-        std::cout << "Selected action: " << action << std::endl;
-#endif
-        auto obs = env->execute(action);
-        integrate(action, obs);
+        integrate(action, env->execute(action));
     }
 
     void BTAI::integrate(int action, const torch::Tensor &obs) {
-        std::shared_ptr<TreeNode<DataMCTS>> newRoot;
+        std::shared_ptr<TreeNode> newRoot;
 
         // Cut-off useless branches.
         for (auto i = _mcts->root()->childrenBegin(); i != _mcts->root()->childrenEnd(); ++i) {
-            if ((*i)->data()->action() == action) {
+            if ((*i)->action() == action) {
                 newRoot = *i;
                 newRoot->clearChildren();
                 newRoot->disconnectParent();
@@ -91,13 +76,13 @@ namespace btai::zoo {
         _mcts->setRoot(newRoot);
 
         // Update posterior beliefs of the new root according to new observation.
-        auto posterior = BayesianFiltering::integrateEvidence(newRoot->data()->beliefs(), _a, obs);
-        newRoot->data()->setBeliefs(posterior);
+        auto posterior = BayesianFiltering::integrateEvidence(newRoot->beliefs(), _a, obs);
+        newRoot->setBeliefs(posterior);
     }
 
     void BTAI::writeGraphviz(const std::string &file_name, const std::vector<std::string> &display) {
         std::pair<std::string, int> dvn("n", 0);
-        GraphViz<DataMCTS> viz(file_name);
+        GraphViz viz(file_name);
 
         viz.writeTree(dvn, _mcts->root(), display);
     }

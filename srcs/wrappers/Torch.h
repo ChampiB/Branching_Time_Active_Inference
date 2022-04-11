@@ -27,6 +27,13 @@ namespace btai::wrappers {
         static torch::Tensor empty(torch::IntArrayRef shape);
 
         /**
+         * Create a tensor full of zeros.
+         * @param shape of the tensor to be created.
+         * @return the created tensor.
+         */
+        static torch::Tensor zeros(torch::IntArrayRef shape);
+
+        /**
          * Create a tensor filled with a value.
          * @param shape of the tensor.
          * @param value used to fill the vector.

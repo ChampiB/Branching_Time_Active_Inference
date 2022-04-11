@@ -2,79 +2,101 @@
 // Created by Theophile Champion on 01/08/2021.
 //
 
-#include "data/DataMCTS.h"
 #include "TreeNode.h"
+
+using namespace torch;
 
 namespace btai::graphs {
 
-    template<class DataType>
-    std::shared_ptr<TreeNode<DataType>> TreeNode<DataType>::create(std::unique_ptr<DataType> &&data) {
-        return std::make_shared<TreeNode>(std::move(data));
+    std::shared_ptr<TreeNode> TreeNode::create(const Tensor &beliefs, int action, double cost, int visits) {
+        return std::make_shared<TreeNode>(beliefs, action, cost, visits);
     }
 
-    template<class DataType>
-    TreeNode<DataType>::TreeNode(std::unique_ptr<DataType> &&data) {
+    TreeNode::TreeNode(const Tensor &beliefs, int action, double cost, int visits) {
         _parent = nullptr;
-        _data = std::move(data);
+        _beliefs = beliefs;
+        _action = action;
+        _cost = cost;
+        _visits = visits;
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::setParent(TreeNode<DataType> *node) {
+    void TreeNode::setParent(TreeNode *node) {
         _parent = node;
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::addChild(const std::shared_ptr<TreeNode<DataType>> &node) {
+    void TreeNode::addChild(const std::shared_ptr<TreeNode> &node) {
         _children.push_back(node);
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::removeChild(int id) {
+    void TreeNode::removeChild(int id) {
         _children.erase(_children.begin() + id);
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::setData(std::unique_ptr<DataType> &data) {
-        _data = std::move(data);
+    int TreeNode::visits() const {
+        return _visits;
     }
 
-    template<class DataType>
-    DataType *TreeNode<DataType>::data() const {
-        return _data.get();
+    double TreeNode::cost() const {
+        return _cost;
     }
 
-    template<class DataType>
-    TreeNode<DataType> *TreeNode<DataType>::parent() const {
+    int TreeNode::action() const {
+        return _action;
+    }
+
+    Tensor TreeNode::beliefs() const {
+        return _beliefs;
+    }
+
+    std::string TreeNode::get(const string &attributeName) {
+        if (attributeName == "G")
+            return std::to_string(_cost);
+        if (attributeName == "U")
+            return std::to_string(_action);
+        if (attributeName == "N")
+            return std::to_string(_visits);
+        if (attributeName == "S")
+            return std::to_string(torch::argmax(_beliefs).item<int>());
+        throw std::runtime_error("In DataMCTS::get(key), unsupported key.");
+    }
+
+    TreeNode *TreeNode::parent() const {
         return _parent;
     }
 
-    template<class DataType>
-    TreeNode<DataType> *TreeNode<DataType>::child(int id) const {
+    TreeNode *TreeNode::child(int id) const {
         return _children[id].get();
     }
 
-    template<class DataType>
-    int TreeNode<DataType>::nChildren() const {
-        return _children.size();
+    int TreeNode::nChildren() const {
+        return (int) _children.size();
     }
 
-    template<class DataType>
-    typename std::vector<std::shared_ptr<TreeNode<DataType>>>::iterator TreeNode<DataType>::childrenBegin() {
+    void TreeNode::increaseVisitCount() {
+        ++_visits;
+    }
+
+    void TreeNode::addCost(double cost) {
+        _cost += cost;
+    }
+
+    void TreeNode::setBeliefs(const Tensor &beliefs) {
+        _beliefs = beliefs;
+    }
+
+    typename std::vector<std::shared_ptr<TreeNode>>::iterator TreeNode::childrenBegin() {
         return _children.begin();
     }
 
-    template<class DataType>
-    typename std::vector<std::shared_ptr<TreeNode<DataType>>>::iterator TreeNode<DataType>::childrenEnd() {
+    typename std::vector<std::shared_ptr<TreeNode>>::iterator TreeNode::childrenEnd() {
         return _children.end();
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::clearChildren() {
+    void TreeNode::clearChildren() {
         _children.clear();
     }
 
-    template<class DataType>
-    void TreeNode<DataType>::disconnectParent() {
+    void TreeNode::disconnectParent() {
         // Remove "node" from its parent's list of children.
         if (_parent != nullptr) {
             for (int i = 0; i < _parent->nChildren(); ++i) {

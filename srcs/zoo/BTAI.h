@@ -18,7 +18,7 @@ namespace btai::algorithms {
     class MCTS;
 }
 namespace btai::graphs {
-    template<class DataType> class TreeNode;
+    class TreeNode;
 }
 namespace btai::graphs::data {
     class DataMCTS;
@@ -80,7 +80,7 @@ namespace btai::zoo {
         torch::Tensor _d;
 
         std::unique_ptr<algorithms::MCTS> _mcts;
-        std::shared_ptr<graphs::TreeNode<graphs::data::DataMCTS>> _root;
+        std::shared_ptr<graphs::TreeNode> _root;
     };
 
 }

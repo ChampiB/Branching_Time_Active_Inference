@@ -4,29 +4,24 @@
 
 #include "GraphViz.h"
 #include "graphs/TreeNode.h"
-#include "graphs/data/DataMCTS.h"
 
 using namespace btai::graphs;
 
 namespace btai::graphs {
 
-    template<class DataType>
-    GraphViz<DataType>::GraphViz(const std::string &file_name) {
-        _file_name = file_name;
+    GraphViz::GraphViz(const std::string &file_name) {
         _file.open(file_name);
         _file << "digraph G {\n";
     }
 
-    template<class DataType>
-    GraphViz<DataType>::~GraphViz() {
+    GraphViz::~GraphViz() {
         _file << "}\n";
         _file.close();
     }
 
-    template<class DataType>
-    void GraphViz<DataType>::writeTree(
+    void GraphViz::writeTree(
         std::pair<std::string, int> &dvn,
-        const std::shared_ptr<TreeNode<DataType>> &root,
+        const std::shared_ptr<TreeNode> &root,
         const std::vector<std::string> &display,
         const std::string &parentName
     ) {
@@ -46,10 +41,9 @@ namespace btai::graphs {
         }
     }
 
-    template<class DataType>
-    void GraphViz<DataType>::writeNode(
+    void GraphViz::writeNode(
         std::string &name,
-        const std::shared_ptr<TreeNode<DataType>> &node,
+        const std::shared_ptr<TreeNode> &node,
         const std::vector<std::string> &display
     ) {
         if (display.empty())
@@ -60,15 +54,14 @@ namespace btai::graphs {
         std::string label = R"(<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">)";
         for (auto i : display) {
             label += "<TR><TD bgcolor=\"YellowGreen\">" + i + "</TD>" + \
-            "<TD bgcolor=\"YellowGreen\">" + node->data()->get(i) + "</TD></TR>";
+            "<TD bgcolor=\"YellowGreen\">" + node->get(i) + "</TD></TR>";
         }
         label += "</table>>";
         _file << "\t" << name << "_data [shape=none,margin=0,label=" << label << "]\n";
 
     }
 
-    template<class DataType>
-    std::string GraphViz<DataType>::getName(std::pair<std::string, int> &default_name) {
+    std::string GraphViz::getName(std::pair<std::string, int> &default_name) {
         std::string res;
 
         res = default_name.first + std::to_string(default_name.second);

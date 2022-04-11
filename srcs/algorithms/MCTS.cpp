@@ -6,7 +6,6 @@
 #include <torch/torch.h>
 #include "wrappers/Torch.h"
 #include "graphs/TreeNode.h"
-#include "graphs/data/DataMCTS.h"
 #include "algorithms/configurations/ConfigMCTS.h"
 #include "algorithms/BayesianFiltering.h"
 
@@ -40,41 +39,47 @@ namespace btai::algorithms {
     }
 
     std::vector<NodeMCTS *> MCTS::expansion(const std::shared_ptr<NodeMCTS> &node, const torch::Tensor &b) {
-        std::vector<NodeMCTS *> expandedNodes;
+        // Initialise the transition matrices, if this is the first time the function is called.
+        static std::vector<Tensor> b_mat;
+        if (b_mat.empty()) {
+            for (int action = 0; action < b.size(2); ++action)
+                b_mat.emplace_back(squeeze(narrow(b, 2, action, 1)));
+        }
 
+        // Create the expanded nodes.
+        std::vector<NodeMCTS *> expandedNodes;
         for (int action = 0; action < b.size(2); ++action) {
-            auto b_i = squeeze(torch::narrow(b, 2, action, 1));
-            auto beliefs = BayesianFiltering::predict(node->data()->beliefs(), b_i);
-            auto expandedNode = TreeNode<DataMCTS>::create(DataMCTS::create(beliefs, action));
+            auto beliefs = BayesianFiltering::predict(node->beliefs(), b_mat[action]);
+            auto expandedNode = TreeNode::create(beliefs, action);
             node->addChild(expandedNode);
             expandedNode->setParent(node.get());
-            expandedNodes.push_back(expandedNode.get());
+            expandedNodes.emplace_back(expandedNode.get());
         }
         return expandedNodes;
     }
 
     void MCTS::evaluation(const std::vector<NodeMCTS *> &nodes, const torch::Tensor &a, const torch::Tensor &c) {
         for (auto node : nodes) {
-            auto sBeliefs = node->data()->beliefs();
+            auto sBeliefs = node->beliefs();
             auto oBeliefs = BayesianFiltering::predict(sBeliefs, a);
-            node->data()->addCost(efe(sBeliefs, oBeliefs, a, c));
+            node->addCost(efe(sBeliefs, oBeliefs, a, c));
         }
     }
 
     void MCTS::propagation(const std::vector<NodeMCTS *> &nodes) {
         auto bestChild = *std::min_element(nodes.begin(), nodes.end(), &MCTS::compareCost);
-        double cost = bestChild->data()->cost();
+        double cost = bestChild->cost();
         auto current = bestChild->parent();
 
         while (current != nullptr) {
-            current->data()->addCost(cost);
-            current->data()->increaseVisitCount();
+            current->addCost(cost);
+            current->increaseVisitCount();
             current = current->parent();
         }
     }
 
     bool MCTS::compareCost(const NodeMCTS *n1, const NodeMCTS *n2) {
-        return n1->data()->cost() < n2->data()->cost();
+        return n1->cost() < n2->cost();
     }
 
     bool MCTS::compareUCT(const std::shared_ptr<NodeMCTS> &n1, const std::shared_ptr<NodeMCTS> &n2) const {
@@ -82,15 +87,15 @@ namespace btai::algorithms {
     }
 
     double MCTS::uct(const std::shared_ptr<NodeMCTS> &node) const {
-        int n = node->parent()->data()->visits();
-        int n_i = node->data()->visits();
+        int n = node->parent()->visits();
+        int n_i = node->visits();
 
-        return - node->data()->cost() / n_i + _config->explorationConstant() * std::sqrt(std::log(n) / n_i);
+        return - node->cost() / n_i + _config->explorationConstant() * std::sqrt(std::log(n) / n_i);
     }
 
     double MCTS::efe(const Tensor &sBeliefs, const Tensor &oBeliefs, const Tensor &a, const Tensor &c) {
-        auto risk = torch::matmul(oBeliefs, oBeliefs.log() - c.log()).item<double>();
-        auto ambiguity = - torch::matmul(torch::diag(torch::matmul(a.log().t(), a.log())), sBeliefs).item<double>();
+        auto risk = matmul(oBeliefs, (oBeliefs / c).log()).item<double>();
+        auto ambiguity = - matmul(diag(matmul(a.log().t(), a.log())), sBeliefs).item<double>();
 
         return risk + ambiguity;
     }
@@ -101,18 +106,12 @@ namespace btai::algorithms {
 
         for (int i = 0; i < nbActions; ++i) {
             auto child = _root->child(i);
-            int action = child->data()->action();
-            w[action] = - _config->actionPrecision() * child->data()->cost() / child->data()->visits();
+            w[child->action()] = - _config->actionPrecision() * child->cost() / child->visits();
         }
-        w = softmax(w, 0);
-#ifndef NDEBUG
-        std::cout << "Probability of actions: " << std::endl;
-        std::cout << w << std::endl;
-#endif
-        return Torch::randomInt(w);
+        return Torch::randomInt(softmax(w, 0));
     }
 
-    void MCTS::setRoot(const std::shared_ptr<TreeNode<DataMCTS>> &root) {
+    void MCTS::setRoot(const std::shared_ptr<TreeNode> &root) {
         _root = root;
     }
 
@@ -120,7 +119,7 @@ namespace btai::algorithms {
         return _config;
     }
 
-    std::shared_ptr<TreeNode<DataMCTS>> MCTS::root() {
+    std::shared_ptr<TreeNode> MCTS::root() {
         return _root;
     }
 

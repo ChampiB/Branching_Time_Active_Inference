@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.16)
 # Create the Branching Time Active Inference
 project(BTAI LANGUAGES CXX)
 
+# Compilation flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
+
 # Require C++ 17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,7 +36,6 @@ set(BTAI_SOURCES
         # Graph package
         srcs/graphs/TreeNode.cpp srcs/graphs/TreeNode.h
         srcs/graphs/GraphViz.cpp srcs/graphs/GraphViz.h
-        srcs/graphs/data/DataMCTS.cpp srcs/graphs/data/DataMCTS.h
         # Zoo package
         srcs/zoo/BTAI.cpp srcs/zoo/BTAI.h
         # Program entry point

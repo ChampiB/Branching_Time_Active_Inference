@@ -18,6 +18,10 @@ namespace btai::wrappers {
         return torch::empty(shape).to(kDouble);
     }
 
+    Tensor Torch::zeros(torch::IntArrayRef shape) {
+        return torch::zeros(shape).to(kDouble);
+    }
+
     Tensor Torch::full(torch::IntArrayRef shape, double value) {
         return torch::full(shape, value).to(kDouble);
     }

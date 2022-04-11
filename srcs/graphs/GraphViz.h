@@ -11,15 +11,11 @@
 #include <fstream>
 
 namespace btai::graphs {
-    template<class DataType> class TreeNode;
-}
-namespace btai::graphs::data {
-    class DataMCTS;
+    class TreeNode;
 }
 
 namespace btai::graphs {
 
-    template<class DataType>
     class GraphViz {
     public:
         /**
@@ -41,7 +37,7 @@ namespace btai::graphs {
          */
         void writeTree(
             std::pair<std::string,int> &dvn,
-            const std::shared_ptr<TreeNode<DataType>> &root,
+            const std::shared_ptr<TreeNode> &root,
             const std::vector<std::string> &display,
             const std::string &parentName = ""
         );
@@ -55,7 +51,7 @@ namespace btai::graphs {
          */
         void writeNode(
             std::string &name,
-            const std::shared_ptr<TreeNode<DataType>> &node,
+            const std::shared_ptr<TreeNode> &node,
             const std::vector<std::string> &display
         );
 
@@ -71,8 +67,6 @@ namespace btai::graphs {
         std::string _file_name;
         std::ofstream _file;
     };
-
-    template class GraphViz<graphs::data::DataMCTS>;
 
 }
 

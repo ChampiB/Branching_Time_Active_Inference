@@ -7,30 +7,30 @@
 
 #include <memory>
 #include <vector>
+#include <torch/torch.h>
 
 namespace btai::graphs {
 
-    template<class DataType>
     class TreeNode {
     public:
         /**
          * Factory.
-         * @param data the
+         * @param action the node's action.
+         * @param cost the node's cost.
+         * @param beliefs the node's posterior beliefs.
+         * @param visits the node's number of visits.
          * @return the created node.
          */
-        static std::shared_ptr<TreeNode> create(std::unique_ptr<DataType> &&data);
+        static std::shared_ptr<TreeNode> create(const torch::Tensor &beliefs, int action = -1, double cost = 0, int visits = 1);
 
         /**
          * Constructor.
-         * @param data the node's data
+         * @param action the node's action.
+         * @param cost the node's cost.
+         * @param beliefs the node's beliefs.
+         * @param visits the node's number of visits.
          */
-        explicit TreeNode(std::unique_ptr<DataType> &&data);
-
-        /**
-         * Set the data of the node.
-         * @param data the new data.
-         */
-        void setData(std::unique_ptr<DataType> &data);
+        explicit TreeNode(const torch::Tensor &beliefs, int action, double cost, int visits);
 
         /**
          * Set the parent of the node.
@@ -62,9 +62,34 @@ namespace btai::graphs {
 
         /**
          * Getter.
-         * @return the node's data.
+         * @return the node's number of visits.
          */
-        [[nodiscard]] DataType *data() const;
+        [[nodiscard]] int visits() const;
+
+        /**
+         * Getter.
+         * @return the node's beliefs.
+         */
+        [[nodiscard]] torch::Tensor beliefs() const;
+
+        /**
+         * Getter.
+         * @return the node's cost.
+         */
+        [[nodiscard]] double cost() const;
+
+        /**
+         * Getter.
+         * @return the node's action.
+         */
+        [[nodiscard]] int action() const;
+
+        /**
+         * Getter.
+         * @param attributeName the name of the attribute whose value should be returned.
+         * @return the value of the attribute.
+         */
+        std::string get(const std::string &attributeName);
 
         /**
          * Getter.
@@ -86,6 +111,23 @@ namespace btai::graphs {
         [[nodiscard]] int nChildren() const;
 
         /**
+         * Increase the number of visits of the node.
+         */
+        void increaseVisitCount();
+
+        /**
+         * Add cost to node.
+         * @param cost the additional cost.
+         */
+        void addCost(double cost);
+
+        /**
+         * Setter.
+         * @param beliefs new node's beliefs.
+         */
+        void setBeliefs(const torch::Tensor &beliefs);
+
+        /**
          * Getter.
          * @return an iterator pointing to the beginning of the children vector.
          */
@@ -98,15 +140,16 @@ namespace btai::graphs {
         [[nodiscard]] typename std::vector<std::shared_ptr<TreeNode>>::iterator childrenEnd();
 
     private:
-        std::unique_ptr<DataType> _data;
+        // Pointers to parent and child.
         TreeNode *_parent;
         std::vector<std::shared_ptr<TreeNode>> _children;
-    };
 
-    namespace data {
-        class DataMCTS;
-    }
-    template class TreeNode<data::DataMCTS>;
+        // Node's data.
+        int _visits;
+        int _action;
+        double _cost;
+        torch::Tensor _beliefs;
+    };
 }
 
 #endif //BTAI_TREE_NODE_H

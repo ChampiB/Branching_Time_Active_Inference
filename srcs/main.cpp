@@ -9,8 +9,6 @@
 #include "environments/GraphEnv.h"
 #include "environments/EnvType.h"
 #include "environments/MazeEnv.h"
-#include "graphs/data/DataMCTS.h"
-#include "graphs/TreeNode.h"
 #include "experiments/GraphPerformanceTracker.h"
 #include "experiments/MazePerformanceTracker.h"
 #include "experiments/TimeTracker.h"
@@ -42,21 +40,21 @@ int main() {
     int NB_ACTION_PERCEPTION_CYCLES = 20;
     std::string OUTPUT_FILE_NAME = "../results/btai_bf_results.txt";
 
-    // Maze environment hyper-parameters
+    // Maze environment hyper-parameters.
     EnvType envType = EnvType::GRAPH;
 
-    // Maze environment hyper-parameters
+    // Maze environment hyper-parameters.
     std::string MAZES_PATH = "../mazes/";
     std::string MAZE_FILE_NAME = "1.maze";
     std::string FULL_MAZE_FILE_NAME = MAZES_PATH + MAZE_FILE_NAME;
     std::vector<std::pair<int,int>> LOCAL_MINIMA = getLocalMinima(MAZE_FILE_NAME);
 
-    // Graph environment hyper-parameters
-    int NB_GOOD_PATHS = 5;
+    // Graph environment hyper-parameters.
+    int NB_GOOD_PATHS = 3;
     int NB_BAD_PATHS = 5;
-    std::vector<int> GOOD_PATHS_SIZES = {6,6,6,5,8};
+    std::vector<int> GOOD_PATHS_SIZES = {6,5,8};
 
-    // MCTS hyper-parameters
+    // MCTS hyper-parameters.
     int    NB_PLANNING_STEPS = 100;
     double EXPLORATION_CONSTANT = 2;
     double PRECISION_PRIOR_PREFERENCES = 3;
@@ -99,11 +97,10 @@ int main() {
         perf_tracker = GraphPerformanceTracker::create();
     else
         perf_tracker = MazePerformanceTracker::create(LOCAL_MINIMA);
-    auto time_tracker = TimeTracker::create();
+    auto time_tracker = TimeTracker::create(NB_SIMULATIONS);
 
-    // Initialise trackers.
+    // Initialise performance tracker.
     perf_tracker->reset();
-    time_tracker->tic();
 
     // Run the episodes.
     for (int j = 0; j < NB_SIMULATIONS; ++j) {
@@ -113,25 +110,20 @@ int main() {
         auto agent = BTAI::create(env, conf, obs);
 
         // Run one episode.
-#ifndef NDEBUG
-        env->print();
-#endif
+        // env->print(); //TODO
+        time_tracker->tic();
         for (int k = 0; k < NB_ACTION_PERCEPTION_CYCLES; ++k) {
             agent->step(env);
-#ifndef NDEBUG
-            env->print();
-#endif
+            // env->print(); //TODO
             if (env->solved()) {
                 break;
             }
         }
+        time_tracker->toc();
 
-        // Evaluate simulation.
+        // Evaluate performance of the simulation.
         perf_tracker->track(env);
     }
-
-    // Evaluate run time of simulations.
-    time_tracker->toc();
 
     // Print trackers results
     time_tracker->print(file);
