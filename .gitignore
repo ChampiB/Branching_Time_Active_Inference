@@ -1,4 +1,5 @@
 # But those files
+d_sprites/dsprites-dataset/
 !examples/graphs/graph_format.md
 !examples/graphs/example.graph
 examples/graphs/*

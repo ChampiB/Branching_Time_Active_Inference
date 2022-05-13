@@ -36,9 +36,7 @@ namespace btai::zoo {
         _d = env->D();
 
         // Compute prior preferences.
-        _c = softmax(
-            config->preferencesPrecision() * (env->observations() - Torch::range(0, env->observations())), 0
-        );
+        _c = env->C(config->preferencesPrecision());
 
         // Compute posterior beliefs over initial state
         auto posterior = BayesianFiltering::integrateEvidence(_d, _a, obs);

@@ -96,6 +96,13 @@ namespace btai::environments {
 
         /**
          * Getter.
+         * @param prefPrecision the precision over the prior preferences.
+         * @return the prior preferences over observations
+         */
+        [[nodiscard]] torch::Tensor C(double prefPrecision) const override;
+
+        /**
+         * Getter.
          * @return the true initial hidden states
          */
         torch::Tensor D() override;
@@ -110,7 +117,7 @@ namespace btai::environments {
          * Getter.
          * @return the type of environment.
          */
-        EnvType type() const override;
+        [[nodiscard]] EnvType type() const override;
 
     public:
         /**

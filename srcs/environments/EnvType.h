@@ -9,7 +9,8 @@ namespace btai::environments {
 
     enum EnvType {
         MAZE = 0,
-        GRAPH = 1
+        GRAPH = 1,
+        D_SPRITES = 2,
     };
 
 }

@@ -9,8 +9,10 @@
 #include "environments/GraphEnv.h"
 #include "environments/EnvType.h"
 #include "environments/MazeEnv.h"
+#include "environments/DisentangleSpritesEnv.h"
 #include "experiments/GraphPerformanceTracker.h"
 #include "experiments/MazePerformanceTracker.h"
+#include "experiments/SpritesPerformanceTracker.h"
 #include "experiments/TimeTracker.h"
 #include "zoo/BTAI.h"
 
@@ -38,10 +40,10 @@ int main() {
     // Demo hyper-parameters.
     int NB_SIMULATIONS = 100;
     int NB_ACTION_PERCEPTION_CYCLES = 20;
-    std::string OUTPUT_FILE_NAME = "../results/btai_bf_results.txt";
+    std::string OUTPUT_FILE_NAME = "../results/btai_bf_results_d_sprites.txt";
 
     // Maze environment hyper-parameters.
-    EnvType envType = EnvType::GRAPH;
+    EnvType envType = EnvType::D_SPRITES;
 
     // Maze environment hyper-parameters.
     std::string MAZES_PATH = "../mazes/";
@@ -54,10 +56,15 @@ int main() {
     int NB_BAD_PATHS = 5;
     std::vector<int> GOOD_PATHS_SIZES = {6,5,8};
 
+    // Disentanglement sprites environment hyper-parameters.
+    std::string D_SPRITES_PATH = "../d_sprites/";
+    int GRANULARITY = 2;
+    int REPEAT = 8;
+
     // MCTS hyper-parameters.
-    int    NB_PLANNING_STEPS = 100;
-    double EXPLORATION_CONSTANT = 2;
-    double PRECISION_PRIOR_PREFERENCES = 3;
+    int    NB_PLANNING_STEPS = 50;
+    double EXPLORATION_CONSTANT = 2.4;
+    double PRECISION_PRIOR_PREFERENCES = 1;
     double PRECISION_ACTION_SELECTION = 100;
 
     // Open the file in which the result should be written.
@@ -70,9 +77,13 @@ int main() {
         file << "NB_GOOD_PATHS: " << NB_GOOD_PATHS << std::endl;
         file << "NB_BAD_PATHS: " << NB_BAD_PATHS << std::endl;
         file << "GOOD_PATHS_SIZES: " << GOOD_PATHS_SIZES << std::endl;
-    } else {
+    } else if (envType == EnvType::MAZE) {
         file << "MAZE_FILE_NAME: " << MAZE_FILE_NAME << std::endl;
         file << "LOCAL_MINIMA: " << LOCAL_MINIMA << std::endl;
+    } else {
+        file << "D_SPRITES_PATH: " << D_SPRITES_PATH << std::endl;
+        file << "GRANULARITY: " << GRANULARITY << std::endl;
+        file << "REPEAT: " << REPEAT << std::endl;
     }
     file << "NB_PLANNING_STEPS: " << NB_PLANNING_STEPS << std::endl;
     file << "EXPLORATION_CONSTANT: " << EXPLORATION_CONSTANT << std::endl;
@@ -83,8 +94,10 @@ int main() {
     std::shared_ptr<Environment> env;
     if (envType == EnvType::GRAPH)
         env = GraphEnv::create(NB_GOOD_PATHS, NB_BAD_PATHS, GOOD_PATHS_SIZES);
-    else
+    else if (envType == EnvType::MAZE)
         env = MazeEnv::create(FULL_MAZE_FILE_NAME);
+    else
+        env = DisentangleSpritesEnv::create(D_SPRITES_PATH, GRANULARITY, REPEAT);
 
     // Create configuration of the MCTS algorithm.
     auto conf = ConfigMCTS::create(
@@ -95,8 +108,10 @@ int main() {
     std::unique_ptr<PerformanceTracker> perf_tracker;
     if (envType == EnvType::GRAPH)
         perf_tracker = GraphPerformanceTracker::create();
-    else
+    else if (envType == EnvType::MAZE)
         perf_tracker = MazePerformanceTracker::create(LOCAL_MINIMA);
+    else
+        perf_tracker = SpritesPerformanceTracker::create();
     auto time_tracker = TimeTracker::create(NB_SIMULATIONS);
 
     // Initialise performance tracker.

@@ -71,6 +71,13 @@ namespace btai::environments {
 
         /**
          * Getter.
+         * @param prefPrecision the precision over the prior preferences.
+         * @return the prior preferences over observations
+         */
+        [[nodiscard]] virtual torch::Tensor C(double prefPrecision) const = 0;
+
+        /**
+         * Getter.
          * @return true if the agent solved the environment, false otherwise.
          */
         virtual bool solved() = 0;

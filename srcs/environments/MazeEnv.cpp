@@ -172,6 +172,11 @@ namespace btai::environments {
         return B;
     }
 
+    torch::Tensor MazeEnv::C(double prefPrecision) const {
+        Tensor C = this->observations() - Torch::range(0, this->observations());
+        return torch::softmax(prefPrecision * C, 0);
+    }
+
     Tensor MazeEnv::D() {
         Tensor D = Torch::full({states()}, 0.1 / (states() - 1));
 

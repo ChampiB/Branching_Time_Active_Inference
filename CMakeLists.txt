@@ -21,6 +21,7 @@ set(BTAI_SOURCES
         srcs/experiments/PerformanceTracker.h
         srcs/experiments/GraphPerformanceTracker.cpp srcs/experiments/GraphPerformanceTracker.h
         srcs/experiments/MazePerformanceTracker.cpp srcs/experiments/MazePerformanceTracker.h
+        srcs/experiments/SpritesPerformanceTracker.cpp srcs/experiments/SpritesPerformanceTracker.h
         srcs/experiments/TimeTracker.cpp srcs/experiments/TimeTracker.h
         # Wrapper package
         srcs/wrappers/Torch.cpp srcs/wrappers/Torch.h
@@ -33,6 +34,7 @@ set(BTAI_SOURCES
         srcs/environments/Environment.h
         srcs/environments/GraphEnv.cpp srcs/environments/GraphEnv.h
         srcs/environments/MazeEnv.cpp srcs/environments/MazeEnv.h
+        srcs/environments/DisentangleSpritesEnv.cpp srcs/environments/DisentangleSpritesEnv.h
         # Graph package
         srcs/graphs/TreeNode.cpp srcs/graphs/TreeNode.h
         srcs/graphs/GraphViz.cpp srcs/graphs/GraphViz.h
@@ -46,6 +48,11 @@ add_executable(btai ${BTAI_SOURCES})
 
 # Add include directory to executable
 target_include_directories(btai PRIVATE srcs)
+
+# Link OpenCV to hopi
+find_package(OpenCV REQUIRED)
+target_include_directories(btai PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(btai PUBLIC ${OpenCV_LIBS})
 
 # Link libtorch to executable
 include(LinkLibTorchToTarget)
